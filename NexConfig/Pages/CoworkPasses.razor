@@ -1,0 +1,55 @@
+﻿@page "/coworkpasses"
+
+@using ApplicationCore.Entities
+@inject ApplicationCore.Interfaces.INexudusService NexudusService
+
+<h1>CoWork Passes</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Pass Name</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (CoWorkingPasses == null)
+        {
+        <tr>
+            <td colspan="3">
+                <p><em>Loading...</em></p>
+            </td>
+        </tr>
+        }
+        else if (CoWorkingPasses.Count() == 0)
+        {
+            <tr>
+                <td colspan="3">
+                    <span>No passes retrieved defined yet...</span>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var pass in CoWorkingPasses)
+            {
+                <tr>
+                    <td>@pass.Name</td>
+                    <td>@pass.Price</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+
+    public IReadOnlyList<Pass> CoWorkingPasses { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        CoWorkingPasses
+            = await NexudusService.GetActivePasses();
+    }
+
+}

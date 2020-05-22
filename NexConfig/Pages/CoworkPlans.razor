@@ -1,0 +1,55 @@
+﻿@page "/coworkplans"
+
+@using ApplicationCore.Entities
+@inject ApplicationCore.Interfaces.INexudusService NexudusService
+
+<h1>CoWork Plans</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Plan Name</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (CoWorkingPlans == null)
+        {
+        <tr>
+            <td colspan="3">
+                <p><em>Loading...</em></p>
+            </td>
+        </tr>
+        }
+        else if (CoWorkingPlans.Count() == 0)
+        {
+            <tr>
+                <td colspan="3">
+                    <span>No plans retrieved defined yet...</span>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var plan in CoWorkingPlans)
+            {
+                <tr>
+                    <td>@plan.Name</td>
+                    <td>@plan.Price</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+
+    public IReadOnlyList<Plan> CoWorkingPlans { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        CoWorkingPlans
+            = await NexudusService.GetActivePlans();
+    }
+
+}

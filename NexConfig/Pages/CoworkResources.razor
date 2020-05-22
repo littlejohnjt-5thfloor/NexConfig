@@ -1,0 +1,53 @@
+﻿@page "/coworkresources"
+
+@using ApplicationCore.Entities
+@inject ApplicationCore.Interfaces.INexudusService NexudusService
+
+<h1>CoWork Resources</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Resource Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (CoWorkingResources == null)
+        {
+        <tr>
+            <td colspan="3">
+                <p><em>Loading...</em></p>
+            </td>
+        </tr>
+        }
+        else if (CoWorkingResources.Count() == 0)
+        {
+            <tr>
+                <td colspan="3">
+                    <span>No resources retrieved defined yet...</span>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var plan in CoWorkingResources)
+            {
+                <tr>
+                    <td>@plan.Name</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+
+    public IReadOnlyList<Resource> CoWorkingResources { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        CoWorkingResources
+            = await NexudusService.GetActiveResources();
+    }
+
+}

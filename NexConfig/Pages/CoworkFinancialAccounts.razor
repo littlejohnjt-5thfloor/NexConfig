@@ -1,0 +1,59 @@
+﻿@page "/coworkfinancialaccounts"
+
+@using ApplicationCore.Entities
+@inject ApplicationCore.Interfaces.INexudusService NexudusService
+
+<h1>CoWork Financial Accounts</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Account Name</th>
+            <th>Code</th>
+            <th>Description</th>
+            <th>Account Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (CoWorkingFinancialAccounts == null)
+        {
+        <tr>
+            <td colspan="3">
+                <p><em>Loading...</em></p>
+            </td>
+        </tr>
+        }
+        else if (CoWorkingFinancialAccounts.Count() == 0)
+        {
+            <tr>
+                <td colspan="3">
+                    <span>No fiancial accounts retrieved defined yet...</span>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var financialAccount in CoWorkingFinancialAccounts)
+            {
+                <tr>
+                    <td>@financialAccount.Name</td>
+                    <td>@financialAccount.Code</td>
+                    <td>@financialAccount.Description</td>
+                    <td>@financialAccount.AccountType</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+
+    public IReadOnlyList<FinancialAccount> CoWorkingFinancialAccounts { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        CoWorkingFinancialAccounts
+            = await NexudusService.GetAllFinancialAccounts();
+    }
+
+}

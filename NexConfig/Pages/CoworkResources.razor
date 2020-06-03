@@ -1,24 +1,26 @@
 ﻿@page "/coworkresources"
 
-@using ApplicationCore.Entities
-@inject ApplicationCore.Interfaces.INexudusService NexudusService
+@using NexConfig.ViewModels
+@inject NexConfig.Interfaces.IResourceViewModelService resourceViewModelService
 
-<h1>CoWork Resources</h1>
+<h1>Resources</h1>
 
 <table class="table">
     <thead>
         <tr>
+            <th><input type="checkbox" checked="@CheckAllState" @onchange="@CheckAll" /></th>
             <th>Resource Name</th>
+            <th>Date Last Saved</th>
         </tr>
     </thead>
     <tbody>
         @if (CoWorkingResources == null)
         {
-        <tr>
-            <td colspan="3">
-                <p><em>Loading...</em></p>
-            </td>
-        </tr>
+            <tr>
+                <td colspan="3">
+                    <p><em>Loading...</em></p>
+                </td>
+            </tr>
         }
         else if (CoWorkingResources.Count() == 0)
         {
@@ -30,24 +32,62 @@
         }
         else
         {
-            foreach (var plan in CoWorkingResources)
+            foreach (var resource in CoWorkingResources)
             {
                 <tr>
-                    <td>@plan.Name</td>
+                    <td><input type="checkbox" @bind="@resource.IsToBeSaved" /></td>
+                    <td>@resource.Name</td>
+                    <td>@resource.DateSaved</td>
                 </tr>
             }
         }
     </tbody>
 </table>
 
+<button class="btn btn-primary" @onclick="SaveResources">Save Selected</button>
+
 @code {
 
-    public IReadOnlyList<Resource> CoWorkingResources { get; set; }
+    public IList<ResourceViewModel> CoWorkingResources { get; set; }
+    public bool CheckAllState { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
         CoWorkingResources
-            = await NexudusService.GetActiveResources();
+            = await resourceViewModelService.GetResources();
+    }
+    protected async Task SaveResources()
+
+    {
+        // Save changes to the selected passes
+        await resourceViewModelService.SaveOrUpdateResource(CoWorkingResources);
+
+        // Get the latest
+        CoWorkingResources
+            = await resourceViewModelService.GetResources();
+
+        CheckAllState = false;
+
+        StateHasChanged();
+    }
+
+    protected void CheckAll()
+    {
+        CheckAllState = !CheckAllState;
+
+        CoWorkingResources
+            = CoWorkingResources.Select(r =>
+            new ResourceViewModel
+            {
+                Name = r.Name,
+                Id = r.Id,
+                IsCurrentlySaved = r.IsCurrentlySaved,
+                IsToBeSaved = CheckAllState,
+                DateSaved = r.DateSaved,
+                EntityId = r.EntityId
+            }).ToList();
+
+        StateHasChanged();
     }
 
 }

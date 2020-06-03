@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ApplicationCore.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -26,5 +27,23 @@ namespace ApplicationCore.Constants
 
         public const string BILLING_FINANCIALACCOUNTS_URL
             = "https://spaces.nexudus.com/api/billing/financialaccounts";
+
+        public const string SYSTEM_BUSINESSES_URL
+            = "https://spaces.nexudus.com/api/sys/businesses";
+
+        public const string SPACES_RESOURCE_TYPES_URL
+            = "https://spaces.nexudus.com/api/spaces/resourcetypes";
+
+        public static IDictionary<Type, string> NexudusUrls { get; }
+            = new Dictionary<Type, string>
+            {
+                { typeof(Plan), BILLING_PLANS_URL }
+                ,{ typeof(Resource), SPACES_RESOURCES_URL }
+                ,{ typeof(Pass), BILLING_TIMEPASSES_URL }
+                ,{ typeof(Product), BILLING_PRODUCTS_URL }
+                ,{ typeof(FinancialAccount), BILLING_FINANCIALACCOUNTS_URL }
+                , { typeof(Business), SYSTEM_BUSINESSES_URL }
+                , { typeof(ResourceType), SPACES_RESOURCE_TYPES_URL }
+            };
     }
 }

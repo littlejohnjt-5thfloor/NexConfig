@@ -8,13 +8,11 @@ using System.Text;
 
 namespace Infrastructure.Data.Config
 {
-    public class ResourceConfiguration : IEntityTypeConfiguration<Resource>
+    public class ResourceTypeConfiguration : IEntityTypeConfiguration<ResourceType>
     {
-        public void Configure(EntityTypeBuilder<Resource> builder)
+        public void Configure(EntityTypeBuilder<ResourceType> builder)
         {
             builder.HasKey(p => p.EntityId);
-            builder.Property(p => p.Longitude).HasColumnType("Money");
-            builder.Property(p => p.Latitude).HasColumnType("Money");
         }
     }
 }

@@ -14,8 +14,11 @@ namespace Infrastructure.Data
 
         public DbSet<Plan> Plans { get; set; }
         public DbSet<Resource> Resources { get; set; }
+        public DbSet<ResourceType> ResourceTypes { get; set; }
         public DbSet<Pass> Passes { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<FinancialAccount> FinancialAccounts { get; set; }
+        public DbSet<Business> Businesses { get; set; }
         public DbSet<AccessToken> AccessTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)

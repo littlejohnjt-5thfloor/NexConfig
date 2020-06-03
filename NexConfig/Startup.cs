@@ -19,6 +19,9 @@ using Infrastructure.Identity;
 using System.Net.Http;
 using ApplicationCore.Interfaces;
 using Infrastructure.Services;
+using ApplicationCore.Entities;
+using NexConfig.Interfaces;
+using NexConfig.Services;
 
 namespace NexConfig
 {
@@ -56,10 +59,15 @@ namespace NexConfig
             services.AddSingleton<IConfiguration>(Configuration);
 
             services.AddScoped(typeof(IAsyncRepository<>), typeof(EfRepository<>));
-            services.AddScoped<IPlanRepository, PlanRepository>();
+            services.AddScoped<IBusinessViewModelService, BusinessViewModelService>();
+            services.AddScoped<IFinancialAccountViewModelService, FinancialAccountViewModelService>();
+            services.AddScoped<IPassViewModelService, PassViewModelService>();
+            services.AddScoped<IProductViewModelService, ProductViewModelService>();
+            services.AddScoped<IPlanViewModelService, PlanViewModelService>();
+            services.AddScoped<IResourceViewModelService, ResourceViewModelService>();
+            services.AddScoped<IResourceTypeViewModelService, ResourceTypeViewModelService>();
             services.AddScoped<ITokenRepository, TokenRepository>();
             services.AddScoped<INexudusService, NexudusService>();
-            services.AddScoped<IPlanService, PlanService>();
             services.AddScoped<UserManager<ApplicationUser>>();
             services.AddScoped<RoleManager<IdentityRole>>();
 

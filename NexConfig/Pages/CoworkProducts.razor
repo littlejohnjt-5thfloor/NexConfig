@@ -1,30 +1,32 @@
 ﻿@page "/coworkproducts"
 
-@using ApplicationCore.Entities
-@inject ApplicationCore.Interfaces.INexudusService NexudusService
+@using NexConfig.ViewModels
+@inject NexConfig.Interfaces.IProductViewModelService productViewModelService
 
-<h1>CoWork Products</h1>
+<h1>Products</h1>
 
 <table class="table">
     <thead>
         <tr>
+            <th><input type="checkbox" checked="@CheckAllState" @onchange="@CheckAll" /></th>
             <th>Product Name</th>
             <th>Price</th>
+            <th>Date Last Saved</th>
         </tr>
     </thead>
     <tbody>
         @if (CoWorkingProducts == null)
         {
-        <tr>
-            <td colspan="3">
-                <p><em>Loading...</em></p>
-            </td>
-        </tr>
+            <tr>
+                <td colspan="4">
+                    <p><em>Loading...</em></p>
+                </td>
+            </tr>
         }
         else if (CoWorkingProducts.Count() == 0)
         {
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <span>No products retrieved defined yet...</span>
                 </td>
             </tr>
@@ -34,22 +36,60 @@
             foreach (var product in CoWorkingProducts)
             {
                 <tr>
+                    <td><input type="checkbox" @bind="@product.IsToBeSaved" /></td>
                     <td>@product.Name</td>
                     <td>@product.Price</td>
+                    <td>@product.DateSaved</td>
                 </tr>
             }
         }
     </tbody>
 </table>
 
+<button class="btn btn-primary" @onclick="SaveProducts">Save Selected</button>
+
 @code {
 
-    public IReadOnlyList<Product> CoWorkingProducts { get; set; }
+    public IList<ProductViewModel> CoWorkingProducts { get; set; }
+    public bool CheckAllState { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
         CoWorkingProducts
-            = await NexudusService.GetActiveProducts();
+            = await productViewModelService.GetProducts();
     }
 
+    protected async Task SaveProducts()
+    {
+        // Save changes to the selected passes
+        await productViewModelService.SaveOrUpdateProduct(CoWorkingProducts);
+
+        // Get the latest
+        CoWorkingProducts
+            = await productViewModelService.GetProducts();
+
+        CheckAllState = false;
+
+        StateHasChanged();
+    }
+
+    protected void CheckAll()
+    {
+        CheckAllState = !CheckAllState;
+
+        CoWorkingProducts
+            = CoWorkingProducts.Select(p =>
+            new ProductViewModel
+            {
+                Price = p.Price,
+                Name = p.Name,
+                Id = p.Id,
+                IsCurrentlySaved = p.IsCurrentlySaved,
+                IsToBeSaved = CheckAllState,
+                DateSaved = p.DateSaved,
+                EntityId = p.EntityId
+            }).ToList();
+
+        StateHasChanged();
+    }
 }

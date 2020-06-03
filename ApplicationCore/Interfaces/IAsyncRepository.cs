@@ -12,7 +12,7 @@ namespace ApplicationCore.Interfaces
         Task<IReadOnlyList<T>> GetAllAsync();
         Task<IReadOnlyList<T>> GetAsync(ICriteria<T> criteria);
         Task<T> AddAsync(T entity);
-        Task UpdateAsync(T entity);
+        Task<bool> UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task<int> CountAsync(ICriteria<T> spec);
         Task<T> FirstAsync(ICriteria<T> spec);

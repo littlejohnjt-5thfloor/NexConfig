@@ -8,12 +8,11 @@ using System.Text;
 
 namespace Infrastructure.Data.Config
 {
-    public class ProductConfiguration : IEntityTypeConfiguration<Product>
+    public class FinancialAccountConfiguration : IEntityTypeConfiguration<FinancialAccount>
     {
-        public void Configure(EntityTypeBuilder<Product> builder)
+        public void Configure(EntityTypeBuilder<FinancialAccount> builder)
         {
-            builder.HasKey(p => p.EntityId);
-            builder.Property(p => p.Price).HasColumnType("Money");
+            builder.HasKey(fa => fa.EntityId);
         }
     }
 }

@@ -1,30 +1,32 @@
 ﻿@page "/coworkpasses"
 
-@using ApplicationCore.Entities
-@inject ApplicationCore.Interfaces.INexudusService NexudusService
+@using NexConfig.ViewModels
+@inject NexConfig.Interfaces.IPassViewModelService passViewModelService
 
-<h1>CoWork Passes</h1>
+<h1>Passes</h1>
 
 <table class="table">
     <thead>
         <tr>
+            <th><input type="checkbox" checked="@CheckAllState" @onchange="@CheckAll" /></th>
             <th>Pass Name</th>
             <th>Price</th>
+            <th>Date Last Saved</th>
         </tr>
     </thead>
     <tbody>
         @if (CoWorkingPasses == null)
         {
-        <tr>
-            <td colspan="3">
-                <p><em>Loading...</em></p>
-            </td>
-        </tr>
+            <tr>
+                <td colspan="4">
+                    <p><em>Loading...</em></p>
+                </td>
+            </tr>
         }
         else if (CoWorkingPasses.Count() == 0)
         {
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <span>No passes retrieved defined yet...</span>
                 </td>
             </tr>
@@ -34,22 +36,60 @@
             foreach (var pass in CoWorkingPasses)
             {
                 <tr>
+                    <td><input type="checkbox" @bind="@pass.IsToBeSaved" /></td>
                     <td>@pass.Name</td>
                     <td>@pass.Price</td>
+                    <td>@pass.DateSaved</td>
                 </tr>
             }
         }
     </tbody>
 </table>
 
+<button class="btn btn-primary" @onclick="SavePasses">Save Selected</button>
+
 @code {
 
-    public IReadOnlyList<Pass> CoWorkingPasses { get; set; }
+    public IList<PassViewModel> CoWorkingPasses { get; set; }
+    public bool CheckAllState { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
         CoWorkingPasses
-            = await NexudusService.GetActivePasses();
+            = await passViewModelService.GetPasses();
     }
 
+    protected async Task SavePasses()
+    {
+        // Save changes to the selected passes
+        await passViewModelService.SaveOrUpdatePass(CoWorkingPasses);
+
+        // Get the latest
+        CoWorkingPasses
+            = await passViewModelService.GetPasses();
+
+        CheckAllState = false;
+
+        StateHasChanged();
+    }
+
+    protected void CheckAll()
+    {
+        CheckAllState = !CheckAllState;
+
+        CoWorkingPasses
+            = CoWorkingPasses.Select(p =>
+            new PassViewModel
+            {
+                Price = p.Price,
+                Name = p.Name,
+                Id = p.Id,
+                IsCurrentlySaved = p.IsCurrentlySaved,
+                IsToBeSaved = CheckAllState,
+                DateSaved = p.DateSaved,
+                EntityId = p.EntityId
+            }).ToList();
+
+        StateHasChanged();
+    }
 }

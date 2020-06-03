@@ -20,6 +20,8 @@ namespace Infrastructure.Data
 
         public async Task<T> AddAsync(T entity)
         {
+            entity.DateSaved = DateTime.Now;
+
             await _dbContext.Set<T>().AddAsync(entity);
             await _dbContext.SaveChangesAsync();
 
@@ -62,10 +64,12 @@ namespace Infrastructure.Data
             return await _dbContext.Set<T>().FindAsync(id);
         }
 
-        public async Task UpdateAsync(T entity)
+        public async Task<bool> UpdateAsync(T entity)
         {
+            entity.DateSaved = DateTime.Now;
+
             _dbContext.Entry(entity).State = EntityState.Modified;
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.SaveChangesAsync() > 0;
         }
 
         private IQueryable<T> ApplyCriteria(ICriteria<T> criteria)

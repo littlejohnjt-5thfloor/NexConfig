@@ -67,9 +67,9 @@ namespace Infrastructure.Services
                 .GetByClientIdAsync(NexudusConstants.CLIENT_ID);
         }
 
-        public async Task<IReadOnlyList<Plan>> GetAllPlans()
+        public async Task<IReadOnlyList<T>> GetItems<T>()
         {
-            IReadOnlyList<Plan> results = null;
+            IReadOnlyList<T> results = null;
 
             await RetrieveToken();
 
@@ -82,7 +82,7 @@ namespace Infrastructure.Services
                 do
                 {
                     using var request = new HttpRequestMessage(
-                        HttpMethod.Get, NexudusConstants.BILLING_PLANS_URL);
+                        HttpMethod.Get, NexudusConstants.NexudusUrls[typeof(T)]);
                     request.Headers.Authorization
                         = new AuthenticationHeaderValue("Bearer",
                         token.Token);
@@ -102,23 +102,23 @@ namespace Infrastructure.Services
                     = await response.Content.ReadAsStringAsync();
 
                 var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Plan>>(
+                    = JsonSerializer.Deserialize<QueryResults<T>>(
                         responseContent);
 
                 results = queryResults.Records;
             }
             catch (Exception ex)
             {
-                _logger.LogError("Exception encountered reading plan information from the Nexudus platform",
+                _logger.LogError("Exception encountered reading information from the Nexudus platform",
                     ex.Message);
             }
 
             return results;
         }
 
-        public async Task<IReadOnlyList<Plan>> GetActivePlans()
+        public async Task<T> GetItem<T>(int id) where T : class
         {
-            IReadOnlyList<Plan> results = null;
+            T results = null;
 
             await RetrieveToken();
 
@@ -132,122 +132,13 @@ namespace Infrastructure.Services
                 {
                     var queryParameters = new Dictionary<string, string>
                     {
-                        { "Tariff_Archived", "false" }
-                    };
-
-                    // Add the query parameters
-                    var requestUrl 
-                        = QueryHelpers.AddQueryString(
-                            NexudusConstants.BILLING_PLANS_URL, 
-                            queryParameters);
-
-                    using var request = new HttpRequestMessage(
-                        HttpMethod.Get, requestUrl);
-                    request.Headers.Authorization
-                        = new AuthenticationHeaderValue("Bearer",
-                        token.Token);
-
-                    response
-                        = await _httpClient.SendAsync(request,
-                        HttpCompletionOption.ResponseHeadersRead);
-
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        await ReauthenticateAsync();
-
-                } while (response.StatusCode == HttpStatusCode.Unauthorized);
-
-                response.EnsureSuccessStatusCode();
-
-                var responseContent
-                    = await response.Content.ReadAsStringAsync();
-
-                var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Plan>>(
-                        responseContent);
-
-                results = queryResults.Records;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Exception encountered reading plan information from the Nexudus platform",
-                    ex.Message);
-            }
-
-            return results;
-        }
-
-        public async Task<IReadOnlyList<Resource>> GetAllResources()
-        {
-            IReadOnlyList<Resource> results = null;
-
-            await RetrieveToken();
-
-            if (token == null) await AuthenticateAsync();
-
-            try
-            {
-                HttpResponseMessage response;
-
-                do
-                {
-                    using var request = new HttpRequestMessage(
-                        HttpMethod.Get, NexudusConstants.SPACES_RESOURCES_URL);
-                    request.Headers.Authorization
-                        = new AuthenticationHeaderValue("Bearer",
-                        token.Token);
-
-                    response
-                        = await _httpClient.SendAsync(request,
-                        HttpCompletionOption.ResponseHeadersRead);
-
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        await ReauthenticateAsync();
-
-                } while (response.StatusCode == HttpStatusCode.Unauthorized);
-
-                response.EnsureSuccessStatusCode();
-
-                var responseContent
-                    = await response.Content.ReadAsStringAsync();
-
-                var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Resource>>(
-                        responseContent);
-
-                results = queryResults.Records;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Exception encountered reading resource information from the Nexudus platform",
-                    ex.Message);
-            }
-
-            return results;
-        }
-
-        public async Task<IReadOnlyList<Resource>> GetActiveResources()
-        {
-            IReadOnlyList<Resource> results = null;
-
-            await RetrieveToken();
-
-            if (token == null) await AuthenticateAsync();
-
-            try
-            {
-                HttpResponseMessage response;
-
-                do
-                {
-                    var queryParameters = new Dictionary<string, string>
-                    {
-                        { "Resource_Archived", "false" }
+                        { "Id", id.ToString() }
                     };
 
                     // Add the query parameters
                     var requestUrl
                         = QueryHelpers.AddQueryString(
-                            NexudusConstants.SPACES_RESOURCES_URL,
+                            NexudusConstants.NexudusUrls[typeof(T)],
                             queryParameters);
 
                     using var request = new HttpRequestMessage(
@@ -271,286 +162,556 @@ namespace Infrastructure.Services
                     = await response.Content.ReadAsStringAsync();
 
                 var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Resource>>(
+                    = JsonSerializer.Deserialize<QueryResults<T>>(
                         responseContent);
 
-                results = queryResults.Records;
+                results = queryResults.Records.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                _logger.LogError("Exception encountered reading resource information from the Nexudus platform",
+                _logger.LogError("Exception encountered reading information from the Nexudus platform",
                     ex.Message);
             }
 
             return results;
         }
 
-        public async Task<IReadOnlyList<Pass>> GetAllPasses()
-        {
-            IReadOnlyList<Pass> results = null;
+        #region Not Used
 
-            await RetrieveToken();
-
-            if (token == null) await AuthenticateAsync();
+        //public async Task<IReadOnlyList<Plan>> GetAllPlans()
+        //{
+        //    IReadOnlyList<Plan> results = null;
 
-            try
-            {
-                HttpResponseMessage response;
+        //    await RetrieveToken();
 
-                do
-                {
-                    using var request = new HttpRequestMessage(
-                        HttpMethod.Get, NexudusConstants.BILLING_TIMEPASSES_URL);
-                    request.Headers.Authorization
-                        = new AuthenticationHeaderValue("Bearer",
-                        token.Token);
+        //    if (token == null) await AuthenticateAsync();
 
-                    response
-                        = await _httpClient.SendAsync(request,
-                        HttpCompletionOption.ResponseHeadersRead);
+        //    try
+        //    {
+        //        HttpResponseMessage response;
 
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        await ReauthenticateAsync();
+        //        do
+        //        {
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, NexudusConstants.BILLING_PLANS_URL);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
 
-                } while (response.StatusCode == HttpStatusCode.Unauthorized);
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
 
-                response.EnsureSuccessStatusCode();
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
 
-                var responseContent
-                    = await response.Content.ReadAsStringAsync();
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
 
-                var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Pass>>(
-                        responseContent);
+        //        response.EnsureSuccessStatusCode();
 
-                results = queryResults.Records;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Exception encountered reading time pass information from the Nexudus platform",
-                    ex.Message);
-            }
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
 
-            return results;
-        }
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Plan>>(
+        //                responseContent);
 
-        public async Task<IReadOnlyList<Pass>> GetActivePasses()
-        {
-            IReadOnlyList<Pass> results = null;
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading plan information from the Nexudus platform",
+        //            ex.Message);
+        //    }
 
-            await RetrieveToken();
+        //    return results;
+        //}
 
-            if (token == null) await AuthenticateAsync();
+        //public async Task<IReadOnlyList<Plan>> GetActivePlans()
+        //{
+        //    IReadOnlyList<Plan> results = null;
 
-            try
-            {
-                HttpResponseMessage response;
+        //    await RetrieveToken();
 
-                do
-                {
-                    var queryParameters = new Dictionary<string, string>
-                    {
-                        { "TimePass_Archived", "false" }
-                    };
+        //    if (token == null) await AuthenticateAsync();
 
-                    // Add the query parameters
-                    var requestUrl
-                        = QueryHelpers.AddQueryString(
-                            NexudusConstants.BILLING_TIMEPASSES_URL,
-                            queryParameters);
+        //    try
+        //    {
+        //        HttpResponseMessage response;
 
-                    using var request = new HttpRequestMessage(
-                        HttpMethod.Get, requestUrl);
-                    request.Headers.Authorization
-                        = new AuthenticationHeaderValue("Bearer",
-                        token.Token);
+        //        do
+        //        {
+        //            var queryParameters = new Dictionary<string, string>
+        //            {
+        //                { "Tariff_Archived", "false" }
+        //            };
 
-                    response
-                        = await _httpClient.SendAsync(request,
-                        HttpCompletionOption.ResponseHeadersRead);
+        //            // Add the query parameters
+        //            var requestUrl 
+        //                = QueryHelpers.AddQueryString(
+        //                    NexudusConstants.BILLING_PLANS_URL, 
+        //                    queryParameters);
 
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        await ReauthenticateAsync();
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, requestUrl);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
 
-                } while (response.StatusCode == HttpStatusCode.Unauthorized);
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
 
-                response.EnsureSuccessStatusCode();
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
 
-                var responseContent
-                    = await response.Content.ReadAsStringAsync();
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
 
-                var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Pass>>(
-                        responseContent);
+        //        response.EnsureSuccessStatusCode();
 
-                results = queryResults.Records;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Exception encountered reading time pass information from the Nexudus platform",
-                    ex.Message);
-            }
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
 
-            return results;
-        }
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Plan>>(
+        //                responseContent);
 
-        public async Task<IReadOnlyList<Product>> GetAllProducts()
-        {
-            IReadOnlyList<Product> results = null;
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading plan information from the Nexudus platform",
+        //            ex.Message);
+        //    }
 
-            await RetrieveToken();
-
-            if (token == null) await AuthenticateAsync();
+        //    return results;
+        //}
 
-            try
-            {
-                HttpResponseMessage response;
+        //public async Task<IReadOnlyList<Resource>> GetAllResources()
+        //{
+        //    IReadOnlyList<Resource> results = null;
+
+        //    await RetrieveToken();
+
+        //    if (token == null) await AuthenticateAsync();
+
+        //    try
+        //    {
+        //        HttpResponseMessage response;
+
+        //        do
+        //        {
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, NexudusConstants.SPACES_RESOURCES_URL);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
 
-                do
-                {
-                    using var request = new HttpRequestMessage(
-                        HttpMethod.Get, NexudusConstants.BILLING_PRODUCTS_URL);
-                    request.Headers.Authorization
-                        = new AuthenticationHeaderValue("Bearer",
-                        token.Token);
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
 
-                    response
-                        = await _httpClient.SendAsync(request,
-                        HttpCompletionOption.ResponseHeadersRead);
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
+
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
+
+        //        response.EnsureSuccessStatusCode();
+
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
 
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        await ReauthenticateAsync();
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Resource>>(
+        //                responseContent);
 
-                } while (response.StatusCode == HttpStatusCode.Unauthorized);
-
-                response.EnsureSuccessStatusCode();
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading resource information from the Nexudus platform",
+        //            ex.Message);
+        //    }
 
-                var responseContent
-                    = await response.Content.ReadAsStringAsync();
+        //    return results;
+        //}
 
-                var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Product>>(
-                        responseContent);
+        //public async Task<IReadOnlyList<Resource>> GetActiveResources()
+        //{
+        //    IReadOnlyList<Resource> results = null;
 
-                results = queryResults.Records;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Exception encountered reading product information from the Nexudus platform",
-                    ex.Message);
-            }
+        //    await RetrieveToken();
+
+        //    if (token == null) await AuthenticateAsync();
 
-            return results;
-        }
+        //    try
+        //    {
+        //        HttpResponseMessage response;
 
-        public async Task<IReadOnlyList<Product>> GetActiveProducts()
-        {
-            IReadOnlyList<Product> results = null;
+        //        do
+        //        {
+        //            var queryParameters = new Dictionary<string, string>
+        //            {
+        //                { "Resource_Archived", "false" }
+        //            };
 
-            await RetrieveToken();
+        //            // Add the query parameters
+        //            var requestUrl
+        //                = QueryHelpers.AddQueryString(
+        //                    NexudusConstants.SPACES_RESOURCES_URL,
+        //                    queryParameters);
 
-            if (token == null) await AuthenticateAsync();
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, requestUrl);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
 
-            try
-            {
-                HttpResponseMessage response;
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
 
-                do
-                {
-                    var queryParameters = new Dictionary<string, string>
-                    {
-                        { "Product_Archived", "false" }
-                    };
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
+
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
+
+        //        response.EnsureSuccessStatusCode();
+
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
 
-                    // Add the query parameters
-                    var requestUrl
-                        = QueryHelpers.AddQueryString(
-                            NexudusConstants.BILLING_PRODUCTS_URL,
-                            queryParameters);
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Resource>>(
+        //                responseContent);
 
-                    using var request = new HttpRequestMessage(
-                        HttpMethod.Get, requestUrl);
-                    request.Headers.Authorization
-                        = new AuthenticationHeaderValue("Bearer",
-                        token.Token);
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading resource information from the Nexudus platform",
+        //            ex.Message);
+        //    }
 
-                    response
-                        = await _httpClient.SendAsync(request,
-                        HttpCompletionOption.ResponseHeadersRead);
+        //    return results;
+        //}
 
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        await ReauthenticateAsync();
+        //public async Task<IReadOnlyList<Pass>> GetAllPasses()
+        //{
+        //    IReadOnlyList<Pass> results = null;
 
-                } while (response.StatusCode == HttpStatusCode.Unauthorized);
+        //    await RetrieveToken();
+
+        //    if (token == null) await AuthenticateAsync();
 
-                response.EnsureSuccessStatusCode();
+        //    try
+        //    {
+        //        HttpResponseMessage response;
 
-                var responseContent
-                    = await response.Content.ReadAsStringAsync();
+        //        do
+        //        {
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, NexudusConstants.BILLING_TIMEPASSES_URL);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
 
-                var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<Product>>(
-                        responseContent);
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
 
-                results = queryResults.Records;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Exception encountered reading product information from the Nexudus platform",
-                    ex.Message);
-            }
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
 
-            return results;
-        }
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
 
-        public async Task<IReadOnlyList<FinancialAccount>> GetAllFinancialAccounts()
-        {
-            IReadOnlyList<FinancialAccount> results = null;
+        //        response.EnsureSuccessStatusCode();
 
-            await RetrieveToken();
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
 
-            if (token == null) await AuthenticateAsync();
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Pass>>(
+        //                responseContent);
 
-            try
-            {
-                HttpResponseMessage response;
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading time pass information from the Nexudus platform",
+        //            ex.Message);
+        //    }
 
-                do
-                {
-                    using var request = new HttpRequestMessage(
-                        HttpMethod.Get, NexudusConstants.BILLING_FINANCIALACCOUNTS_URL);
-                    request.Headers.Authorization
-                        = new AuthenticationHeaderValue("Bearer",
-                        token.Token);
+        //    return results;
+        //}
 
-                    response
-                        = await _httpClient.SendAsync(request,
-                        HttpCompletionOption.ResponseHeadersRead);
+        //public async Task<IReadOnlyList<Pass>> GetActivePasses()
+        //{
+        //    IReadOnlyList<Pass> results = null;
 
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        await ReauthenticateAsync();
+        //    await RetrieveToken();
 
-                } while (response.StatusCode == HttpStatusCode.Unauthorized);
+        //    if (token == null) await AuthenticateAsync();
 
-                response.EnsureSuccessStatusCode();
+        //    try
+        //    {
+        //        HttpResponseMessage response;
 
-                var responseContent
-                    = await response.Content.ReadAsStringAsync();
+        //        do
+        //        {
+        //            var queryParameters = new Dictionary<string, string>
+        //            {
+        //                { "TimePass_Archived", "false" }
+        //            };
 
-                var queryResults
-                    = JsonSerializer.Deserialize<QueryResults<FinancialAccount>>(
-                        responseContent);
+        //            // Add the query parameters
+        //            var requestUrl
+        //                = QueryHelpers.AddQueryString(
+        //                    NexudusConstants.BILLING_TIMEPASSES_URL,
+        //                    queryParameters);
 
-                results = queryResults.Records;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Exception encountered reading financial account information from the Nexudus platform",
-                    ex.Message);
-            }
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, requestUrl);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
 
-            return results;
-        }
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
+
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
+
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
+
+        //        response.EnsureSuccessStatusCode();
+
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
+
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Pass>>(
+        //                responseContent);
+
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading time pass information from the Nexudus platform",
+        //            ex.Message);
+        //    }
+
+        //    return results;
+        //}
+
+        //public async Task<IReadOnlyList<Product>> GetAllProducts()
+        //{
+        //    IReadOnlyList<Product> results = null;
+
+        //    await RetrieveToken();
+
+        //    if (token == null) await AuthenticateAsync();
+
+        //    try
+        //    {
+        //        HttpResponseMessage response;
+
+        //        do
+        //        {
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, NexudusConstants.BILLING_PRODUCTS_URL);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
+
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
+
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
+
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
+
+        //        response.EnsureSuccessStatusCode();
+
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
+
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Product>>(
+        //                responseContent);
+
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading product information from the Nexudus platform",
+        //            ex.Message);
+        //    }
+
+        //    return results;
+        //}
+
+        //public async Task<IReadOnlyList<Product>> GetActiveProducts()
+        //{
+        //    IReadOnlyList<Product> results = null;
+
+        //    await RetrieveToken();
+
+        //    if (token == null) await AuthenticateAsync();
+
+        //    try
+        //    {
+        //        HttpResponseMessage response;
+
+        //        do
+        //        {
+        //            var queryParameters = new Dictionary<string, string>
+        //            {
+        //                { "Product_Archived", "false" }
+        //            };
+
+        //            // Add the query parameters
+        //            var requestUrl
+        //                = QueryHelpers.AddQueryString(
+        //                    NexudusConstants.BILLING_PRODUCTS_URL,
+        //                    queryParameters);
+
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, requestUrl);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
+
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
+
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
+
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
+
+        //        response.EnsureSuccessStatusCode();
+
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
+
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Product>>(
+        //                responseContent);
+
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading product information from the Nexudus platform",
+        //            ex.Message);
+        //    }
+
+        //    return results;
+        //}
+
+        //public async Task<IReadOnlyList<FinancialAccount>> GetAllFinancialAccounts()
+        //{
+        //    IReadOnlyList<FinancialAccount> results = null;
+
+        //    await RetrieveToken();
+
+        //    if (token == null) await AuthenticateAsync();
+
+        //    try
+        //    {
+        //        HttpResponseMessage response;
+
+        //        do
+        //        {
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, NexudusConstants.BILLING_FINANCIALACCOUNTS_URL);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
+
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
+
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
+
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
+
+        //        response.EnsureSuccessStatusCode();
+
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
+
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<FinancialAccount>>(
+        //                responseContent);
+
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading financial account information from the Nexudus platform",
+        //            ex.Message);
+        //    }
+
+        //    return results;
+        //}
+        //public async Task<IReadOnlyList<Business>> GetBusinesses()
+        //{
+        //    IReadOnlyList<Business> results = null;
+
+        //    await RetrieveToken();
+
+        //    if (token == null) await AuthenticateAsync();
+
+        //    try
+        //    {
+        //        HttpResponseMessage response;
+
+        //        do
+        //        {
+        //            using var request = new HttpRequestMessage(
+        //                HttpMethod.Get, NexudusConstants.SYSTEM_BUSINESSES_URL);
+        //            request.Headers.Authorization
+        //                = new AuthenticationHeaderValue("Bearer",
+        //                token.Token);
+
+        //            response
+        //                = await _httpClient.SendAsync(request,
+        //                HttpCompletionOption.ResponseHeadersRead);
+
+        //            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        //                await ReauthenticateAsync();
+
+        //        } while (response.StatusCode == HttpStatusCode.Unauthorized);
+
+        //        response.EnsureSuccessStatusCode();
+
+        //        var responseContent
+        //            = await response.Content.ReadAsStringAsync();
+
+        //        var queryResults
+        //            = JsonSerializer.Deserialize<QueryResults<Business>>(
+        //                responseContent);
+
+        //        results = queryResults.Records;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError("Exception encountered reading business information from the Nexudus platform",
+        //            ex.Message);
+        //    }
+
+        //    return results;
+        //}
+
+        #endregion
 
         private async Task AuthenticateAsync()
         {

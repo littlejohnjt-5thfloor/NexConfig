@@ -8,5 +8,7 @@ namespace ApplicationCore.Entities
     public class BaseEntity
     {
         public int Id { get; set; }
+        public int EntityId { get; set; }
+        public DateTime? DateSaved { get; set; }
     }
 }

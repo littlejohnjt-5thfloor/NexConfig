@@ -12,6 +12,7 @@ namespace Infrastructure.Data.Config
     {
         public void Configure(EntityTypeBuilder<Plan> builder)
         {
+            builder.HasKey(p => p.EntityId);
             builder.Property(p => p.DiscountCharges).HasColumnType("Money");
             builder.Property(p => p.DiscountExtraServices).HasColumnType("Money");
             builder.Property(p => p.DiscountTimePasses).HasColumnType("Money");

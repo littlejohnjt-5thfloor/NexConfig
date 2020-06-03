@@ -1,0 +1,100 @@
+﻿@page "/coworkbusinesses"
+
+@using NexConfig.ViewModels
+@inject NexConfig.Interfaces.IBusinessViewModelService businessViewModelService
+
+<h1>Businesses</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th><input type="checkbox" checked="@CheckAllState" @onchange="@CheckAll" /></th>
+            <th>Business Name</th>
+            <th>Address</th>
+            <th>Web Address</th>
+            <th>Date Last Saved</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (CoWorkingBusinesses == null)
+        {
+        <tr>
+            <td colspan="5">
+                <p><em>Loading...</em></p>
+            </td>
+        </tr>
+        }
+        else if (CoWorkingBusinesses.Count() == 0)
+        {
+            <tr>
+                <td colspan="5">
+                    <span>No businesses retrieved defined yet...</span>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var business in CoWorkingBusinesses)
+            {
+                <tr>
+                    <td><input type="checkbox" @bind="@business.IsToBeSaved" /></td>
+                    <td>@business.Name</td>
+                    <td>@business.Address</td>
+                    <td>@business.WebAddress</td>
+                    <td>@business.DateSaved</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary" @onclick="SaveBusinesses">Save Selected</button>
+
+@code {
+
+    public IList<BusinessViewModel> CoWorkingBusinesses { get; set; }
+    public bool CheckAllState { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Retrieve the businesses
+        CoWorkingBusinesses
+            = await businessViewModelService.GetBusinesses();
+    }
+
+    protected async Task SaveBusinesses()
+    {
+        // Save changes to the selected businesses
+        await businessViewModelService.SaveOrUpdateBusiness(CoWorkingBusinesses);
+
+        // Get the latest
+        CoWorkingBusinesses
+            = await businessViewModelService.GetBusinesses();
+
+        CheckAllState = false;
+
+        StateHasChanged();
+    }
+
+    protected void CheckAll()
+    {
+        CheckAllState = !CheckAllState;
+
+        CoWorkingBusinesses
+            = CoWorkingBusinesses.Select(b =>
+            new BusinessViewModel
+            {
+                Address = b.Address,
+                Id = b.Id,
+                IsCurrentlySaved = b.IsCurrentlySaved,
+                IsToBeSaved = CheckAllState,
+                DateSaved = b.DateSaved,
+                WebAddress = b.WebAddress,
+                EntityId = b.EntityId,
+                Name = b.Name,
+                ContactEmail = b.ContactEmail
+            }).ToList();
+
+        StateHasChanged();
+    }
+}

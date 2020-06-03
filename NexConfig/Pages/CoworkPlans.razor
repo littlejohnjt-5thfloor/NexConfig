@@ -1,25 +1,26 @@
 ﻿@page "/coworkplans"
 
-@using ApplicationCore.Entities
-@inject ApplicationCore.Interfaces.INexudusService NexudusService
+@using NexConfig.ViewModels
+@inject NexConfig.Interfaces.IPlanViewModelService planViewModelService
 
-<h1>CoWork Plans</h1>
+<h1>Plans</h1>
 
 <table class="table">
     <thead>
         <tr>
+            <th><input type="checkbox" checked="@CheckAllState" @onchange="@CheckAll" /></th>
             <th>Plan Name</th>
-            <th>Price</th>
+            <th>Date Last Saved</th>
         </tr>
     </thead>
     <tbody>
         @if (CoWorkingPlans == null)
         {
-        <tr>
-            <td colspan="3">
-                <p><em>Loading...</em></p>
-            </td>
-        </tr>
+            <tr>
+                <td colspan="3">
+                    <p><em>Loading...</em></p>
+                </td>
+            </tr>
         }
         else if (CoWorkingPlans.Count() == 0)
         {
@@ -34,22 +35,59 @@
             foreach (var plan in CoWorkingPlans)
             {
                 <tr>
+                    <td><input type="checkbox" @bind="@plan.IsToBeSaved" /></td>
                     <td>@plan.Name</td>
-                    <td>@plan.Price</td>
+                    <td>@plan.DateSaved</td>
                 </tr>
             }
         }
     </tbody>
 </table>
 
+<button class="btn btn-primary" @onclick="SavePlans">Save Selected</button>
+
 @code {
 
-    public IReadOnlyList<Plan> CoWorkingPlans { get; set; }
+    public IList<PlanViewModel> CoWorkingPlans { get; set; }
+    public bool CheckAllState { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
         CoWorkingPlans
-            = await NexudusService.GetActivePlans();
+            = await planViewModelService.GetPlans();
+    }
+    protected async Task SavePlans()
+
+    {
+        // Save changes to the selected passes
+        await planViewModelService.SaveOrUpdatePlan(CoWorkingPlans);
+
+        // Get the latest
+        CoWorkingPlans
+            = await planViewModelService.GetPlans();
+
+        CheckAllState = false;
+
+        StateHasChanged();
+    }
+
+    protected void CheckAll()
+    {
+        CheckAllState = !CheckAllState;
+
+        CoWorkingPlans
+            = CoWorkingPlans.Select(p =>
+            new PlanViewModel
+            {
+                Name = p.Name,
+                Id = p.Id,
+                IsCurrentlySaved = p.IsCurrentlySaved,
+                IsToBeSaved = CheckAllState,
+                DateSaved = p.DateSaved,
+                EntityId = p.EntityId
+            }).ToList();
+
+        StateHasChanged();
     }
 
 }

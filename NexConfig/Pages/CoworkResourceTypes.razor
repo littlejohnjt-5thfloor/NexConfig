@@ -1,0 +1,94 @@
+﻿@page "/coworkresourcetypes"
+
+@using NexConfig.ViewModels
+@inject NexConfig.Interfaces.IResourceTypeViewModelService resourceTypeViewModelService
+
+<h1>Resource Types</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th><input type="checkbox" checked="@CheckAllState" @onchange="@CheckAll" /></th>
+            <th>Resource Type Name</th>
+            <th>Date Last Saved</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (CoWorkingResourceTypess == null)
+        {
+            <tr>
+                <td colspan="3">
+                    <p><em>Loading...</em></p>
+                </td>
+            </tr>
+        }
+        else if (CoWorkingResourceTypess.Count() == 0)
+        {
+            <tr>
+                <td colspan="3">
+                    <span>No resources retrieved defined yet...</span>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var resourceType in CoWorkingResourceTypess)
+            {
+                <tr>
+                    <td><input type="checkbox" @bind="@resourceType.IsToBeSaved" /></td>
+                    <td>@resourceType.Name</td>
+                    <td>@resourceType.DateSaved</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary" @onclick="SaveResourceTypes">Save Selected</button>
+
+@code {
+
+    public IList<ResourceTypeViewModel> CoWorkingResourceTypess { get; set; }
+    public bool CheckAllState { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CoWorkingResourceTypess
+            = await resourceTypeViewModelService.GetResourceTypes();
+    }
+    protected async Task SaveResourceTypes()
+
+    {
+        // Save changes to the selected passes
+        await resourceTypeViewModelService.SaveOrUpdateResourceType(CoWorkingResourceTypess);
+
+        // Get the latest
+        CoWorkingResourceTypess
+            = await resourceTypeViewModelService.GetResourceTypes();
+
+        CheckAllState = false;
+
+        StateHasChanged();
+    }
+
+    protected void CheckAll()
+    {
+        CheckAllState = !CheckAllState;
+
+        CoWorkingResourceTypess
+            = CoWorkingResourceTypess.Select(rt =>
+        new ResourceTypeViewModel
+        {
+            Name = rt.Name,
+            BusinessId = rt.BusinessId,
+            Id = rt.Id,
+            IsCurrentlySaved = rt.IsCurrentlySaved,
+            IsToBeSaved = CheckAllState,
+            DateSaved = rt.DateSaved,
+            EntityId = rt.EntityId
+        }).ToList();
+
+        StateHasChanged();
+    }
+
+}

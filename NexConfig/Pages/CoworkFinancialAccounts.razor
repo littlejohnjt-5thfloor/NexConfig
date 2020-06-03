@@ -1,24 +1,25 @@
 ﻿@page "/coworkfinancialaccounts"
 
-@using ApplicationCore.Entities
-@inject ApplicationCore.Interfaces.INexudusService NexudusService
+@using NexConfig.ViewModels
+@inject NexConfig.Interfaces.IFinancialAccountViewModelService financialAccountViewModelService
 
-<h1>CoWork Financial Accounts</h1>
+<h1>Financial Accounts</h1>
 
 <table class="table">
     <thead>
         <tr>
+            <th><input type="checkbox" checked="@CheckAllState" @onchange="@CheckAll" /></th>
             <th>Account Name</th>
             <th>Code</th>
             <th>Description</th>
-            <th>Account Type</th>
+            <th>Date Last Saved</th>
         </tr>
     </thead>
     <tbody>
         @if (CoWorkingFinancialAccounts == null)
         {
         <tr>
-            <td colspan="3">
+            <td colspan="5">
                 <p><em>Loading...</em></p>
             </td>
         </tr>
@@ -26,7 +27,7 @@
         else if (CoWorkingFinancialAccounts.Count() == 0)
         {
             <tr>
-                <td colspan="3">
+                <td colspan="5">
                     <span>No fiancial accounts retrieved defined yet...</span>
                 </td>
             </tr>
@@ -36,24 +37,64 @@
             foreach (var financialAccount in CoWorkingFinancialAccounts)
             {
                 <tr>
+                    <td><input type="checkbox" @bind="@financialAccount.IsToBeSaved" /></td>
                     <td>@financialAccount.Name</td>
                     <td>@financialAccount.Code</td>
                     <td>@financialAccount.Description</td>
-                    <td>@financialAccount.AccountType</td>
+                    <td>@financialAccount.DateSaved</td>
                 </tr>
             }
         }
     </tbody>
 </table>
 
+<button class="btn btn-primary" @onclick="SaveFinancialAccounts">Save Selected</button>
+
 @code {
 
-    public IReadOnlyList<FinancialAccount> CoWorkingFinancialAccounts { get; set; }
+    public IList<FinancialAccountViewModel> CoWorkingFinancialAccounts { get; set; }
+    public bool CheckAllState { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
+        // Retrieve the financial accounts
         CoWorkingFinancialAccounts
-            = await NexudusService.GetAllFinancialAccounts();
+            = await financialAccountViewModelService.GetFinancialAccounts();
     }
 
+    protected async Task SaveFinancialAccounts()
+    {
+        // Save changes to the selected financial accounts
+        await financialAccountViewModelService
+            .SaveOrUpdateFinancialAccount(CoWorkingFinancialAccounts);
+
+        // Get the latest
+        CoWorkingFinancialAccounts
+            = await financialAccountViewModelService.GetFinancialAccounts();
+
+        CheckAllState = false;
+
+        StateHasChanged();
+    }
+
+    protected void CheckAll()
+    {
+        CheckAllState = !CheckAllState;
+
+        CoWorkingFinancialAccounts
+            = CoWorkingFinancialAccounts.Select(fa =>
+            new FinancialAccountViewModel
+            {
+                Code = fa.Code,
+                Id = fa.Id,
+                IsCurrentlySaved = fa.IsCurrentlySaved,
+                IsToBeSaved = CheckAllState,
+                DateSaved = fa.DateSaved,
+                Description = fa.Description,
+                EntityId = fa.EntityId,
+                Name = fa.Name
+            }).ToList();
+
+        StateHasChanged();
+    }
 }

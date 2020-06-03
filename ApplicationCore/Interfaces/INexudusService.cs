@@ -8,14 +8,7 @@ namespace ApplicationCore.Interfaces
 {
     public interface INexudusService
     {
-        Task<IReadOnlyList<Plan>> GetAllPlans();
-        Task<IReadOnlyList<Plan>> GetActivePlans();
-        Task<IReadOnlyList<Resource>> GetAllResources();
-        Task<IReadOnlyList<Resource>> GetActiveResources();
-        Task<IReadOnlyList<Pass>> GetAllPasses();
-        Task<IReadOnlyList<Pass>> GetActivePasses();
-        Task<IReadOnlyList<Product>> GetAllProducts();
-        Task<IReadOnlyList<Product>> GetActiveProducts();
-        Task<IReadOnlyList<FinancialAccount>> GetAllFinancialAccounts();
+        Task<IReadOnlyList<T>> GetItems<T>();
+        Task<T> GetItem<T>(int id) where T : class;
     }
 }
